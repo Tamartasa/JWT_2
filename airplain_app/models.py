@@ -19,6 +19,10 @@ class Flight(models.Model):
     is_cancelled = models.BooleanField(db_column="is_cancelled", null=True, blank=True, default=False)
     price = models.IntegerField(db_column="price", null=False, blank=False)
 
+    def __str__(self) -> str:
+        return (
+            f"Flight #{self.flight_number} ({self.origin_city} > {self.destination_city})"
+        )
     class Meta:
         db_table = 'flights'
 
@@ -34,13 +38,3 @@ class Order(models.Model):
 
     class Meta:
         db_table = 'orders'
-
-# class User(models.Model):
-#
-#     first_name = models.CharField(db_column="first_name", max_length=256, null=False, blank=False)
-#     last_name = models.CharField(db_column="last_name", max_length=256, null=False, blank=False)
-#     username = models.CharField(db_column="username", max_length=256, null=False, blank=False)
-#     is_staff = models.BooleanField(db_column="is_staff", null=False, blank=False)
-#
-#     class Meta:
-#         db_table = 'users'
