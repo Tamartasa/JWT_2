@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
@@ -66,6 +68,45 @@ class FlightSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    flight = serializers.PrimaryKeyRelatedField(queryset=Flight.objects.all())
+
     class Meta:
         model = Order
         fields = "__all__"
+
+    def create(self, validated_data):
+        # Get the flight object from the validated data
+        flight = validated_data.get('flight')
+
+        # Calculate the total price based on the number of seats and the seat price of the flight
+        number_of_seats = validated_data.get('number_of_seats')
+
+        if number_of_seats > flight.seats_left:
+            raise serializers.ValidationError("Not enough seats available for this flight.")
+        else:
+            seat_price = flight.price
+            total_price = number_of_seats * seat_price
+
+            # Set the order_date and total_price fields automatically
+            validated_data["order_date"] = datetime.datetime.now()
+            validated_data["total_price"] = total_price
+
+            # Create and return the new Order object
+            new_order = Order.objects.create(**validated_data)
+            return new_order
+
+    def update(self, instance, validated_data):
+        if 'number_of_seats' in validated_data or 'flight' in validated_data:
+            # Get the new number of seats and the new flight ID
+            new_number_of_seats = validated_data.get('number_of_seats', instance.number_of_seats)
+            new_flight_id = validated_data.get('flight', instance.flight_id).id
+
+            # Get the new flight object for the new flight ID
+            new_flight = Flight.objects.get(id=new_flight_id)
+
+            # Calculate the new total price
+            new_total_price = new_number_of_seats * new_flight.price
+            instance.total_price = new_total_price
+            instance.save()
+
+        return instance

@@ -10,7 +10,7 @@ class Flight(models.Model):
     origin_city = models.CharField(db_column="origin_city", max_length=256, null=False, blank=False)
     origin_airport_code = models.CharField(db_column="origin_airport_code", max_length=256, null=True, blank=True)
     destination_country = models.CharField(db_column="destination_country", max_length=256, null=False, blank=False)
-    destination_city = models.CharField(db_column="destination_cityy", max_length=256, null=False, blank=False)
+    destination_city = models.CharField(db_column="destination_city", max_length=256, null=False, blank=False)
     destination_airport_code = models.CharField(db_column="destination_airport_code", max_length=256, null=True, blank=True)
     date_time_origin = models.DateTimeField(db_column="date_time_origin", null=False, blank=False)
     date_time_destination = models.DateTimeField(db_column="date_time_destination", null=False, blank=False)
@@ -25,16 +25,18 @@ class Flight(models.Model):
         )
     class Meta:
         db_table = 'flights'
+        ordering = ['id']
 
 
 class Order(models.Model):
 
-    flight_id = models.ForeignKey(Flight, on_delete=models.RESTRICT)
-    user_id = models.ForeignKey(User, on_delete=models.RESTRICT)
+    flight = models.ForeignKey(Flight, on_delete=models.RESTRICT)
+    user = models.ForeignKey(User, on_delete=models.RESTRICT)
     number_of_seats = models.IntegerField(db_column="number_of_seats", null=False, blank=False,
                                           validators=[MinValueValidator(0)])
-    order_date = models.DateTimeField(db_column="order_date", null=False, blank=False)
-    total_price = models.IntegerField(db_column="total_price", null=False, blank=False)
+    order_date = models.DateTimeField(db_column="order_date", null=True, blank=True)
+    total_price = models.IntegerField(db_column="total_price", null=True, blank=True)
 
     class Meta:
         db_table = 'orders'
+        ordering = ['id']
