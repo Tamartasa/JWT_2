@@ -9,12 +9,16 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from airplain_app.serializers import UserSerializer, RegisterSerializer
 
 
+# signup as user (available for all) or staff (available only by staff user)
 @api_view(['POST'])
 def sign_up(request):
     serializer = RegisterSerializer(data=request.data, many=False, context={'request': request})
     if serializer.is_valid(raise_exception=True):
         new_user = serializer.create(serializer.validated_data)
         return Response(data=UserSerializer(instance=new_user, many=False).data)
+
+
+# Get all current user's data - available only for logged-in users
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])

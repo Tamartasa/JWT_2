@@ -12,14 +12,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from airplain_app.models import Order, Flight
 from airplain_app.serializers import OrderSerializer
 
-# Create your views here.
-
+# Add new order - available only for logged-in users
+# Get all orders - available only for logged-in staff users
 class OrderPermissions(BaseException):
     def has_permission(self, request, view):
-        if request.method in ['POST', 'GET']:
+        if request.method in ['POST']:
             return request.user.is_authenticated
+        if request.method in ['GET']:
+            return request.user.is_authenticated and request.user.is_staff
         return True
 
+# Update order - available only for logged-in staff users or
+# non-staff logged in user that placed the order:
     def has_object_permission(self, request, view, obj):
         if request.method in ['PATCH', 'PUT', 'GET']:
             return request.user.is_authenticated and request.user.is_staff or\
@@ -33,6 +37,7 @@ class OrdersViewSet(ModelViewSet):
 
     serializer_class = OrderSerializer
 
+# Get all orders or search order by field
     def get_queryset(self):
         qs = self.queryset
         if self.action == 'list':

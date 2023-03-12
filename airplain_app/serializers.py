@@ -74,6 +74,8 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = "__all__"
 
+# Create a new order (book a flight), Note that creating/updating an order should pass validation
+# with the amount of seats left on that flight
     def create(self, validated_data):
         # Get the flight object from the validated data
         flight = validated_data.get('flight')
@@ -95,18 +97,25 @@ class OrderSerializer(serializers.ModelSerializer):
             new_order = Order.objects.create(**validated_data)
             return new_order
 
+# Update existing order (Allow updating number of seats + flight id.
+# Note that update should trigger order price recalculation that should occur on the server-side!)
     def update(self, instance, validated_data):
         if 'number_of_seats' in validated_data or 'flight' in validated_data:
             # Get the new number of seats and the new flight ID
-            new_number_of_seats = validated_data.get('number_of_seats', instance.number_of_seats)
-            new_flight_id = validated_data.get('flight', instance.flight_id).id
+            new_number_of_seats = validated_data.get('number_of_seats')
+            new_flight_id = validated_data.get('flight').id
 
             # Get the new flight object for the new flight ID
             new_flight = Flight.objects.get(id=new_flight_id)
 
+            if new_number_of_seats > new_flight.seats_left:
+                raise serializers.ValidationError("Not enough seats available for this flight.")
+
             # Calculate the new total price
             new_total_price = new_number_of_seats * new_flight.price
             instance.total_price = new_total_price
+            instance.number_of_seats = new_number_of_seats
+            instance.flight = new_flight
             instance.save()
 
         return instance
